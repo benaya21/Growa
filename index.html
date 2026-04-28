@@ -20,7 +20,7 @@ body{font-family:'Instrument Sans',sans-serif;background:var(--bg);color:var(--t
 body.dark-theme{--bg:#0F0E0D;--surface:#1A1816;--surface2:#24211E;--border:#2E2A27;--text:#E7E2DF;--muted:#8C8278;--accent:#4A7A4D;--accent-light:#1E2B1F;--danger:#E07A6C;}
 body,nav,.bnav{transition:background-color .3s,color .3s,border-color .3s;}
 body.dark-theme nav{background:rgba(23,20,18,.94);}
-body.dark-theme .bnav{background:rgba(23,20,18,.96);}
+body.dark-theme .bnav{background:rgba(15, 14, 13, 0.96); border-top: 1px solid var(--border);}
 body.dark-theme .nav-links a.active{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
 body.dark-theme .btn-primary{background:var(--text);color:var(--bg);}
 body.dark-theme .mli-check.checked{background:var(--accent);border-color:var(--accent);}
@@ -236,32 +236,40 @@ body.dark-theme .link-btn{background:#213446;color:#BEDFFF;border-color:#365A78;
 .toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(14px);background:var(--text);color:#fff;padding:10px 22px;border-radius:99px;font-size:13px;font-weight:500;opacity:0;transition:all .25s;z-index:999;pointer-events:none;white-space:nowrap;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 @media(min-width:601px){.toast{bottom:28px;}}
-
-/* BOTTOM NAV */
-/* BOTTOM NAV */
+/* BOTTOM NAV - Diperkuat agar muncul di HP */
 .bnav {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  background: rgba(242, 239, 233, 0.98);
-  backdrop-filter: blur(12px);
+  background: rgba(242, 239, 233, 0.98); /* Lebih solid agar konten tidak tembus */
+  backdrop-filter: blur(15px);
   border-top: 1px solid var(--border);
-  display: none;
-  padding: 10px 0 calc(10px + env(safe-area-inset-bottom));
-  z-index: 999;
+  display: none; /* Default sembunyi di desktop */
+  padding: 8px 0 calc(10px + env(safe-area-inset-bottom)); /* Support iPhone Notch */
+  z-index: 1000; /* Pastikan paling depan */
+  box-shadow: 0 -2px 20px rgba(0,0,0,0.05);
 }
 
-/* Ubah breakpoint ke 900px agar tablet juga dapat menu bawah */
-@media(max-width: 900px) {
-  .bnav { display: flex; justify-content: space-around; }
-  .nav-links a { display: none; }
-  .ctrl-btn span.label { display: none; }
-}
-
-/* Tambahkan padding pada main agar konten tidak tertutup menu bawah */
-main {
-  padding-bottom: calc(100px + env(safe-area-inset-bottom));
+/* Update Breakpoint agar lebih responsif */
+@media(max-width: 850px) {
+  .bnav { 
+    display: flex; 
+    justify-content: space-around; 
+  }
+  .nav-links { 
+    display: none !important; /* Sembunyikan menu atas di HP */
+  }
+  .nav-brand {
+    flex: 1;
+    text-align: center; /* Brand jadi di tengah untuk HP */
+  }
+  .ctrl-btn span.label { 
+    display: none; /* Sembunyikan teks tombol musik/tema agar muat */
+  }
+  main {
+    padding-bottom: 100px; /* Beri jarak bawah agar konten tidak tertutup menu */
+  }
 }
 .bnav-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 12px;cursor:pointer;border-radius:10px;background:none;border:none;}
 .bnav-item.active{background:var(--surface);box-shadow:var(--shadow);}
@@ -414,11 +422,21 @@ main {
 </main>
 
 <nav class="bnav">
-  <button class="bnav-item active" onclick="showPage('dashboard');setActiveBnav(this)"><span class="bnav-icon">⌂</span><span class="bnav-lbl">Home</span></button>
-  <button class="bnav-item" onclick="showPage('today');setActiveBnav(this)"><span class="bnav-icon">◈</span><span class="bnav-lbl">Misi</span></button>
-  <button class="bnav-item" onclick="showPage('journal');setActiveBnav(this)"><span class="bnav-icon">◇</span><span class="bnav-lbl">Journal</span></button>
-  <button class="bnav-item" onclick="showPage('analytics');setActiveBnav(this)"><span class="bnav-icon">▦</span><span class="bnav-lbl">Progress</span></button>
-  <button class="bnav-item" onclick="window.location.href='admin.html'"><span class="bnav-icon">⚙</span><span class="bnav-lbl">Admin</span></button>
+  <button class="bnav-item active" onclick="showPage('dashboard');setActiveBnav(this)">
+    <span class="bnav-icon">⌂</span><span class="bnav-lbl">Home</span>
+  </button>
+  <button class="bnav-item" onclick="showPage('today');setActiveBnav(this)">
+    <span class="bnav-icon">◈</span><span class="bnav-lbl">Misi</span>
+  </button>
+  <button class="bnav-item" onclick="showPage('journal');setActiveBnav(this)">
+    <span class="bnav-icon">◇</span><span class="bnav-lbl">Journal</span>
+  </button>
+  <button class="bnav-item" onclick="showPage('timeline');setActiveBnav(this)">
+    <span class="bnav-icon">📜</span><span class="bnav-lbl">Catatan</span>
+  </button>
+  <button class="bnav-item" onclick="showPage('analytics');setActiveBnav(this)">
+    <span class="bnav-icon">▦</span><span class="bnav-lbl">Progress</span>
+  </button>
 </nav>
 
 <!-- Pomodoro Timer -->
@@ -900,12 +918,29 @@ function showPage(name) {
   document.getElementById('page-'+name).classList.add('active');
   document.querySelectorAll('.nav-links a').forEach(a=>a.classList.remove('active'));
   const n=document.getElementById('nav-'+name); if(n) n.classList.add('active');
+
+  // Sinkronisasi menu bawah (HP) - Tambahkan ini
+  updateBnavActive(name);
+
   if(name==='today') renderToday();
   if(name==='journal') { renderJournal(); setupJournalAuto(); }
   if(name==='timeline') renderTimeline();
   if(name==='analytics') renderAnalytics();
   if(name==='dashboard') renderDashboard();
   window.scrollTo(0,0);
+}
+
+// Fungsi pembantu baru
+function updateBnavActive(name) {
+  const bnavItems = document.querySelectorAll('.bnav-item');
+  bnavItems.forEach(btn => {
+    btn.classList.remove('active');
+    // Cek berdasarkan fungsi onclick-nya
+    if(btn.getAttribute('onclick').includes(name)) {
+      btn.classList.add('active');
+    }
+  });
+}
 }
 function setActiveBnav(el) { document.querySelectorAll('.bnav-item').forEach(b=>b.classList.remove('active')); el.classList.add('active'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
