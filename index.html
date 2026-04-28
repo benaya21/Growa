@@ -238,8 +238,31 @@ body.dark-theme .link-btn{background:#213446;color:#BEDFFF;border-color:#365A78;
 @media(min-width:601px){.toast{bottom:28px;}}
 
 /* BOTTOM NAV */
-.bnav{position:fixed;bottom:0;left:0;right:0;background:rgba(242,239,233,.95);backdrop-filter:blur(12px);border-top:1px solid var(--border);display:none;padding:8px 0 14px;z-index:80;}
-@media(max-width:600px){.bnav{display:flex;justify-content:space-around;}.nav-links a{display:none;}.ctrl-btn span.label{display:none;}}
+/* BOTTOM NAV */
+.bnav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(242, 239, 233, 0.98);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border);
+  display: none;
+  padding: 10px 0 calc(10px + env(safe-area-inset-bottom));
+  z-index: 999;
+}
+
+/* Ubah breakpoint ke 900px agar tablet juga dapat menu bawah */
+@media(max-width: 900px) {
+  .bnav { display: flex; justify-content: space-around; }
+  .nav-links a { display: none; }
+  .ctrl-btn span.label { display: none; }
+}
+
+/* Tambahkan padding pada main agar konten tidak tertutup menu bawah */
+main {
+  padding-bottom: calc(100px + env(safe-area-inset-bottom));
+}
 .bnav-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 12px;cursor:pointer;border-radius:10px;background:none;border:none;}
 .bnav-item.active{background:var(--surface);box-shadow:var(--shadow);}
 .bnav-icon{font-size:19px;}
