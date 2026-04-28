@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel — Growth³⁰</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700&family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F0EDE7;--surface:#FFFFFF;--surface2:#F5F3EF;--border:#E0DAD1;--text:#1C1917;--muted:#8C8278;--accent:#1A3A4A;--accent-light:#D0E4EE;--danger:#C0392B;--radius:12px;--radius-sm:8px;--shadow:0 1px 6px rgba(0,0,0,.06),0 3px 18px rgba(0,0,0,.04);}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Instrument Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+.login-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px;z-index:500;}
+.login-screen.hidden{display:none;}
+.login-box{background:var(--surface);border-radius:var(--radius);padding:44px 40px;width:100%;max-width:380px;border:1px solid var(--border);box-shadow:var(--shadow);}
+.login-box h1{font-family:'Fraunces',serif;font-size:26px;font-weight:700;margin-bottom:4px;}
+.login-box p{font-size:13px;color:var(--muted);margin-bottom:28px;}
+.login-err{background:#fdecea;border:1px solid #f5c6c2;color:var(--danger);padding:9px 12px;border-radius:7px;font-size:12px;display:none;margin-bottom:12px;}
+.login-err.show{display:block;}
+.shell{display:grid;grid-template-columns:220px 1fr;min-height:100vh;}
+.shell.hidden{display:none;}
+.sidebar{background:var(--text);color:#fff;padding:24px 16px;display:flex;flex-direction:column;}
+.sidebar-brand{font-family:'Fraunces',serif;font-size:16px;font-weight:700;padding:0 10px;margin-bottom:6px;color:#fff;}
+.sidebar-brand small{display:block;font-family:'Instrument Sans',sans-serif;font-size:10px;font-weight:400;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.4);margin-top:2px;}
+.sidebar-divider{height:1px;background:rgba(255,255,255,.1);margin:14px 0;}
+.sidebar-label{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.35);padding:0 10px;margin-bottom:4px;}
+.menu-btn{display:block;width:100%;text-align:left;padding:9px 10px;border-radius:8px;font-family:'Instrument Sans',sans-serif;font-size:13px;font-weight:500;color:rgba(255,255,255,.6);background:none;border:none;cursor:pointer;transition:all .16s;margin-bottom:2px;}
+.menu-btn:hover{background:rgba(255,255,255,.08);color:#fff;}
+.menu-btn.active{background:rgba(255,255,255,.14);color:#fff;font-weight:600;}
+.sidebar-spacer{flex:1;}
+.sidebar-footer{padding:12px 10px;border-top:1px solid rgba(255,255,255,.1);margin-top:auto;}
+.logout-btn{width:100%;padding:9px 12px;border-radius:8px;background:rgba(255,255,255,.06);color:rgba(255,255,255,.5);border:1px solid rgba(255,255,255,.1);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .16s;text-align:left;}
+.logout-btn:hover{background:rgba(255,255,255,.12);color:#fff;}
+.sync-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:99px;font-size:10px;font-weight:700;letter-spacing:.5px;background:rgba(255,255,255,.06);color:rgba(255,255,255,.4);margin-bottom:8px;}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:#6b7280;}
+.sync-dot.ok{background:#22C55E;}
+.sync-dot.syncing{background:#F59E0B;animation:pulse .8s infinite;}
+.sync-dot.err{background:#EF4444;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.content-area{padding:32px;overflow-y:auto;}
+.panel{display:none;}
+.panel.active{display:block;}
+.panel-header{margin-bottom:28px;}
+.panel-header h2{font-family:'Fraunces',serif;font-size:24px;font-weight:700;margin-bottom:4px;}
+.panel-header p{font-size:13px;color:var(--muted);}
+.card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);padding:22px;margin-bottom:16px;}
+.card-title{font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;}
+.btn{display:inline-flex;align-items:center;gap:6px;border:none;border-radius:8px;padding:10px 20px;font-family:'Instrument Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .16s;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{background:#0f2a38;}
+.btn-full{width:100%;justify-content:center;}
+.btn-ghost{background:transparent;color:var(--text);border:1.5px solid var(--border);}
+.btn-ghost:hover{border-color:var(--text);}
+.btn-danger{background:#fdecea;color:var(--danger);}
+.btn-danger:hover{background:#f5c6c2;}
+.btn-sm{padding:6px 12px;font-size:12px;}
+.btn-success{background:#e8f5e9;color:#1b5e20;}
+.btn-success:hover{background:#c8e6c9;}
+.form-group{margin-bottom:14px;}
+.form-group label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px;}
+.form-group input,.form-group textarea,.form-group select{width:100%;padding:10px 13px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'Instrument Sans',sans-serif;font-size:14px;background:var(--surface2);color:var(--text);outline:none;transition:border-color .16s;resize:vertical;}
+.form-group input:focus,.form-group textarea:focus,.form-group select:focus{border-color:var(--accent);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.quest-row{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;}
+.qr-day{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;background:var(--surface);border-radius:5px;padding:4px 8px;border:1px solid var(--border);flex-shrink:0;min-width:54px;text-align:center;}
+.qr-title{font-size:13px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.qr-type{font-size:10px;font-weight:700;padding:3px 8px;border-radius:99px;flex-shrink:0;}
+.qr-actions{display:flex;gap:6px;flex-shrink:0;}
+.type-affiliate{background:#FFF0F5;color:#AD1457;}
+.type-learning{background:#E8EAF6;color:#283593;}
+.type-mindset{background:#E8F5E9;color:#1B5E20;}
+.type-academic{background:#FFF8E1;color:#E65100;}
+.type-journaling{background:#F3E5F5;color:#6A1B9A;}
+.type-reflection{background:#FCE4EC;color:#880E4F;}
+.type-audio{background:#E1F5FE;color:#0277BD;}
+.type-comm{background:#FBE9E7;color:#BF360C;}
+.type-custom{background:var(--surface2);color:var(--muted);}
+.filter-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+.filter-btn{padding:6px 12px;border-radius:99px;font-size:12px;font-weight:600;border:1.5px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer;transition:all .15s;font-family:'Instrument Sans',sans-serif;}
+.filter-btn:hover{border-color:var(--accent);color:var(--text);}
+.filter-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+.day-sel-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;margin:12px 0;}
+.day-sel-btn{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 4px;text-align:center;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--muted);transition:all .15s;}
+.day-sel-btn:hover{border-color:var(--accent);color:var(--text);}
+.day-sel-btn.selected{background:var(--accent);color:#fff;border-color:var(--accent);}
+.level-row{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:10px;}
+.level-row-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:10px;}
+.motiv-row{display:flex;gap:8px;margin-bottom:8px;align-items:flex-start;}
+.motiv-row textarea{flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'Instrument Sans',sans-serif;font-size:13px;background:var(--surface2);color:var(--text);outline:none;resize:vertical;transition:border-color .16s;}
+.motiv-row textarea:focus{border-color:var(--accent);}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;display:none;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surface);border-radius:var(--radius);padding:26px;width:100%;max-width:540px;max-height:85vh;overflow-y:auto;box-shadow:0 16px 60px rgba(0,0,0,.15);}
+.modal h3{font-family:'Fraunces',serif;font-size:20px;margin-bottom:5px;}
+.modal .modal-sub{font-size:13px;color:var(--muted);margin-bottom:18px;}
+.modal-footer{display:flex;gap:8px;margin-top:20px;}
+.modal-footer .btn-primary{flex:1;}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;text-align:center;}
+.stat-card .sv{font-family:'JetBrains Mono',monospace;font-size:28px;font-weight:700;display:block;}
+.stat-card .sl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-top:3px;}
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(14px);background:var(--text);color:#fff;padding:10px 22px;border-radius:99px;font-size:13px;font-weight:500;opacity:0;transition:all .25s;z-index:999;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.empty-state{text-align:center;padding:48px 20px;color:var(--muted);}
+.empty-state h4{font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px;}
+.empty-state p{font-size:13px;line-height:1.6;}
+.user-link{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);font-size:13px;font-weight:500;color:var(--muted);text-decoration:none;transition:all .16s;}
+.user-link:hover{border-color:var(--accent);color:var(--text);}
+.tpl-row{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:6px;display:flex;align-items:center;gap:10px;}
+.tpl-title{font-size:13px;flex:1;}
+.ritual-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+.ritual-item:last-child{border-bottom:none;}
+.ritual-check{width:20px;height:20px;border-radius:6px;border:2px solid var(--border);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .18s;}
+.ritual-check.done{background:var(--accent);border-color:var(--accent);}
+.ritual-check.done::after{content:'✓';font-size:11px;color:#fff;font-weight:700;}
+.ritual-label{font-size:13px;font-weight:500;flex:1;}
+.ritual-label.done{text-decoration:line-through;opacity:.5;}
+.user-prog-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-bottom:12px;}
+.up-cell{aspect-ratio:1;border-radius:4px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);border:1px solid var(--border);}
+.up-cell.done{background:var(--accent);color:#fff;border-color:var(--accent);}
+.up-cell.today{background:var(--text);color:#fff;border-color:var(--text);}
+.mood-summary{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;}
+.mood-cell{width:22px;height:22px;display:flex;align-items:center;justify-content:center;background:var(--surface2);border-radius:4px;font-size:12px;}
+</style>
+</head>
+<body>
+
+<div class="login-screen" id="login-screen">
+  <div class="login-box">
+    <h1>Admin Panel</h1>
+    <p>Growth³⁰ — Akses khusus admin</p>
+    <div class="login-err" id="login-err">Password salah. Coba lagi.</div>
+    <form onsubmit="handleLogin(event)" style="display:flex;flex-direction:column;gap:10px">
+      <div class="form-group" style="margin:0"><label>Password</label><input type="password" id="admin-pw" placeholder="Masukkan password admin" required></div>
+      <button type="submit" class="btn btn-primary btn-full" style="margin-top:4px">Masuk</button>
+    </form>
+  </div>
+</div>
+
+<div class="shell hidden" id="shell">
+  <aside class="sidebar">
+    <div class="sidebar-brand">Growth<sup style="font-size:8px;opacity:.5">30</sup><small>Admin Panel</small></div>
+    <div class="sidebar-divider"></div>
+    <div class="sync-badge"><span class="sync-dot" id="sync-dot"></span><span id="sync-label">Menghubungkan…</span></div>
+    <div class="sidebar-label">Menu Utama</div>
+    <button class="menu-btn active" onclick="switchPanel('overview',this)">Overview</button>
+    <button class="menu-btn" onclick="switchPanel('user-progress',this)">Progres User</button>
+    <button class="menu-btn" onclick="switchPanel('quests',this)">Quest List</button>
+    <button class="menu-btn" onclick="switchPanel('add-quest',this)">Tambah Quest</button>
+    <button class="menu-btn" onclick="switchPanel('templates',this)">Template Quest</button>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-label">Pengaturan</div>
+    <button class="menu-btn" onclick="switchPanel('levels',this)">Level Mode</button>
+    <button class="menu-btn" onclick="switchPanel('motivation',this)">Pesan Motivasi</button>
+    <button class="menu-btn" onclick="switchPanel('admin-message',this)">Pesan Pribadi</button>
+    <button class="menu-btn" onclick="switchPanel('day-control',this)">Hari Aktif</button>
+    <button class="menu-btn" onclick="switchPanel('user-settings',this)">Pengaturan User</button>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-label">Ritual Harian</div>
+    <button class="menu-btn" onclick="switchPanel('ritual',this)">Daily Checklist</button>
+    <div class="sidebar-spacer"></div>
+    <div class="sidebar-footer">
+      <a href="index.html" class="user-link" style="margin-bottom:8px;display:flex">Lihat Halaman User</a>
+      <button class="logout-btn" onclick="logout()">Keluar dari Admin</button>
+    </div>
+  </aside>
+
+  <div class="content-area">
+
+    <!-- OVERVIEW -->
+    <div class="panel active" id="panel-overview">
+      <div class="panel-header"><h2>Overview</h2><p>Ringkasan sistem dan status terkini.</p></div>
+      <div class="stat-grid" id="overview-stats"></div>
+      <div class="card"><div class="card-title">Quest Hari Aktif</div><div id="overview-today-quests"></div></div>
+      <div class="card"><div class="card-title">Distribusi Quest per Hari</div><div id="overview-dist" style="display:flex;flex-wrap:wrap;gap:4px;"></div></div>
+      <div class="card">
+        <div class="card-title">Manajemen Data</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-ghost btn-sm" onclick="exportData()">Export JSON</button>
+          <button class="btn btn-danger btn-sm" onclick="importData()">Import JSON</button>
+          <button class="btn btn-ghost btn-sm" onclick="pullAll()">↻ Refresh dari Supabase</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- USER PROGRESS -->
+    <div class="panel" id="panel-user-progress">
+      <div class="panel-header"><h2>Progres User</h2><p>Pantau perjalanan dan kondisi emosional user.</p></div>
+      <div class="card"><div class="card-title">Kalender Penyelesaian</div><div class="user-prog-grid" id="up-cal-grid"></div></div>
+      <div class="card">
+        <div class="card-title">Mood Map Harian</div>
+        <div class="mood-summary" id="up-mood-grid"></div>
+        <div style="margin-top:10px;font-size:12px;color:var(--muted)">Klik hari untuk melihat jurnal.</div>
+      </div>
+      <div class="card"><div class="card-title">Jurnal Terbaru</div><div id="up-latest-journals"></div></div>
+      <div class="card"><div class="card-title">Ringkasan Cepat</div><div id="up-summary"></div></div>
+    </div>
+
+    <!-- QUEST LIST -->
+    <div class="panel" id="panel-quests">
+      <div class="panel-header"><h2>Quest List</h2><p>Semua misi yang sudah dibuat.</p></div>
+      <div class="card" style="padding:12px;margin-bottom:12px;"><input type="text" id="quest-search" placeholder="Cari judul atau tipe misi..." oninput="searchQuests(this.value)" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:8px;font-family:'Instrument Sans',sans-serif;font-size:14px;background:var(--surface2);color:var(--text);outline:none;"></div>
+      <div class="filter-bar" id="day-filter-bar"></div>
+      <div id="quest-list"></div>
+    </div>
+
+    <!-- ADD QUEST -->
+    <div class="panel" id="panel-add-quest">
+      <div class="panel-header"><h2>Tambah Quest</h2><p>Buat misi baru untuk hari tertentu.</p></div>
+      <div class="card">
+        <div class="form-row">
+          <div class="form-group"><label>Hari ke-</label><input type="number" id="add-day" min="1" max="30" placeholder="1 – 30"></div>
+          <div class="form-group"><label>Tipe Misi</label>
+            <select id="add-type"><option value="affiliate">Affiliate Task</option><option value="learning">Learning / Video</option><option value="mindset">Mindset Exercise</option><option value="academic">Academic</option><option value="journaling">Journaling</option><option value="reflection">Reflection</option><option value="audio">Audio / Podcast</option><option value="comm">Komunikasi</option><option value="custom">Custom</option></select>
+          </div>
+        </div>
+        <div class="form-group"><label>Judul Misi</label><input type="text" id="add-title" placeholder="Contoh: Tonton video komunikasi percaya diri"></div>
+        <div class="form-group"><label>Deskripsi / Instruksi</label><textarea id="add-desc" rows="3" placeholder="Jelaskan secara spesifik..."></textarea></div>
+        <div class="form-row">
+          <div class="form-group"><label>Durasi (menit)</label><input type="number" id="add-duration" min="1" placeholder="Contoh: 15"></div>
+          <div class="form-group"><label>Link Resource (opsional)</label><input type="url" id="add-link" placeholder="https://..."></div>
+        </div>
+        <div class="form-group"><label>Reflection Task (opsional)</label><input type="text" id="add-reflection" placeholder="Contoh: Tulis 2 insight dari materi ini"></div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-primary" style="flex:1" onclick="addQuest()">Simpan Quest</button>
+          <button class="btn btn-ghost" onclick="saveAsTemplate()">Simpan sebagai Template</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TEMPLATES -->
+    <div class="panel" id="panel-templates">
+      <div class="panel-header"><h2>Template Quest</h2><p>Quest yang sering dipakai. Klik untuk langsung pakai.</p></div>
+      <div id="template-list"></div>
+      <div class="empty-state" id="template-empty" style="display:none"><h4>Belum ada template</h4><p>Simpan quest sebagai template dari halaman Tambah Quest.</p></div>
+    </div>
+
+    <!-- LEVELS -->
+    <div class="panel" id="panel-levels">
+      <div class="panel-header"><h2>Level Mode</h2><p>Sesuaikan nama, ikon, dan deskripsi setiap fase perjalanan.</p></div>
+      <div id="level-editor"></div>
+      <button class="btn btn-primary" onclick="saveLevels()">Simpan Perubahan</button>
+    </div>
+
+    <!-- MOTIVATION -->
+    <div class="panel" id="panel-motivation">
+      <div class="panel-header"><h2>Pesan Motivasi</h2><p>Pesan yang muncul di dashboard user.</p></div>
+      <div class="card">
+        <div id="motiv-editor"></div>
+        <button class="btn btn-ghost btn-full" style="margin-bottom:10px" onclick="addMotiv()">+ Tambah Pesan</button>
+        <button class="btn btn-primary btn-full" onclick="saveMotiv()">Simpan Pesan</button>
+      </div>
+    </div>
+
+    <!-- ADMIN MESSAGE -->
+    <div class="panel" id="panel-admin-message">
+      <div class="panel-header"><h2>Pesan Pribadi</h2><p>Kirim pesan spesial yang muncul sebagai banner di dashboard user.</p></div>
+      <div class="card">
+        <div class="form-group">
+          <label>Pesan untuk User</label>
+          <textarea id="admin-message-input" rows="4" placeholder="Tulis pesan cintamu di sini... 💌"></textarea>
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">Pesan ini akan muncul sebagai banner di dashboard user. User bisa menutupnya.</div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-primary" style="flex:1" onclick="saveAdminMessage()">Kirim Pesan</button>
+          <button class="btn btn-danger" onclick="clearAdminMessage()">Hapus Pesan</button>
+        </div>
+      </div>
+      <div class="card" style="background:#F0F9FF;border-color:#B3DFF5;">
+        <div class="card-title">Preview</div>
+        <div style="background:linear-gradient(135deg,#1A3A4A,#2C5F2E);color:#fff;border-radius:10px;padding:16px 20px;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;opacity:.7;margin-bottom:6px;">Pesan untukmu</div>
+          <p id="admin-msg-preview" style="font-size:14px;line-height:1.6;"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- DAY CONTROL -->
+    <div class="panel" id="panel-day-control">
+      <div class="panel-header"><h2>Hari Aktif</h2><p>Atur hari yang sedang berjalan untuk user.</p></div>
+      <div class="card">
+        <div class="card-title">Pilih Hari</div>
+        <div class="day-sel-grid" id="day-sel-grid"></div>
+        <div style="margin-top:14px;padding:14px;background:var(--surface2);border-radius:var(--radius-sm);border:1px solid var(--border);">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:1px">Hari Aktif Sekarang</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:30px;font-weight:700" id="cur-day-display">1</div>
+        </div>
+        <button class="btn btn-primary" style="margin-top:12px" onclick="saveDay()">Set Hari Aktif</button>
+      </div>
+    </div>
+
+    <!-- USER SETTINGS -->
+    <div class="panel" id="panel-user-settings">
+      <div class="panel-header"><h2>Pengaturan User</h2><p>Nama panggilan yang muncul di sapaan dashboard user.</p></div>
+      <div class="card">
+        <div class="form-group"><label>Nama Panggilan User</label><input type="text" id="user-name-input" placeholder="Contoh: Sayang, Bebe, atau nama asli"></div>
+        <button class="btn btn-primary btn-full" onclick="saveUserName()">Simpan Nama</button>
+      </div>
+    </div>
+
+    <!-- RITUAL HARIAN -->
+    <div class="panel" id="panel-ritual">
+      <div class="panel-header"><h2>Daily Admin Ritual</h2><p>Checklist harian untuk memastikan kamu sudah mendampingi dengan baik.</p></div>
+      <div class="card">
+        <div id="ritual-list"></div>
+        <div style="margin-top:14px;display:flex;gap:8px;">
+          <button class="btn btn-ghost btn-sm" onclick="resetRitual()">Reset Checklist</button>
+          <span style="flex:1"></span>
+          <span style="font-size:12px;color:var(--muted);align-self:center" id="ritual-status">0/0 selesai</span>
+        </div>
+      </div>
+      <div class="card" style="background:#FFFBF0;border-color:#EDE0A0;">
+        <div class="card-title">Catatan Admin Hari Ini</div>
+        <textarea id="admin-notes" rows="4" style="width:100%;padding:10px;border:1px solid #EDE0A0;border-radius:8px;font-family:'Instrument Sans',sans-serif;font-size:14px;background:transparent;color:var(--text);outline:none;resize:vertical;" placeholder="Tulis catatan pribadi untuk dirimu sendiri..."></textarea>
+        <button class="btn btn-sm btn-ghost" style="margin-top:8px" onclick="saveAdminNotes()">Simpan Catatan</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Edit Quest Modal -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal">
+    <h3>Edit Quest</h3>
+    <p class="modal-sub">Hari ke-<span id="edit-day-label"></span></p>
+    <input type="hidden" id="edit-quest-id">
+    <div class="form-group"><label>Judul Misi</label><input id="edit-title" type="text"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Tipe</label>
+        <select id="edit-type"><option value="affiliate">Affiliate Task</option><option value="learning">Learning / Video</option><option value="mindset">Mindset Exercise</option><option value="academic">Academic</option><option value="journaling">Journaling</option><option value="reflection">Reflection</option><option value="audio">Audio / Podcast</option><option value="comm">Komunikasi</option><option value="custom">Custom</option></select>
+      </div>
+      <div class="form-group"><label>Durasi (menit)</label><input id="edit-duration" type="number" min="1"></div>
+    </div>
+    <div class="form-group"><label>Deskripsi</label><textarea id="edit-desc" rows="3"></textarea></div>
+    <div class="form-row">
+      <div class="form-group"><label>Link Resource</label><input id="edit-link" type="url" placeholder="https://..."></div>
+      <div class="form-group"><label>Reflection Task</label><input id="edit-ref-prompt"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Batal</button>
+      <button class="btn btn-primary" onclick="saveEdit()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Journal viewer modal -->
+<div class="modal-overlay" id="journal-modal">
+  <div class="modal">
+    <h3 id="jm-title">Jurnal Hari ke-1</h3>
+    <p class="modal-sub" id="jm-mood">—</p>
+    <div style="background:var(--surface2);border-radius:10px;padding:16px;margin-bottom:12px;">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px;">Pertanyaan Hari Ini</div>
+      <p id="jm-life" style="font-size:14px;line-height:1.7;"></p>
+    </div>
+    <div style="background:var(--surface2);border-radius:10px;padding:16px;">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px;">Refleksi Harian</div>
+      <p id="jm-ref" style="font-size:14px;line-height:1.7;font-style:italic;"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-full" onclick="closeJournalModal()">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ── SUPABASE CONFIG ──
+const SUPABASE_URL = 'https://qhtwfuuitmzbqieudxsk.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_dZVl7rrnlsvEl9ArtjxMsQ_TFGMk9Mn';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const ADMIN_PW = 'benayaabner21';
+const KEY_TEMPLATES = 'gc_templates';
+const KEY_RITUAL_DONE = 'gc_ritual_done';
+
+const TYPE_META = {affiliate:{label:'Affiliate',cls:'type-affiliate'},learning:{label:'Learning',cls:'type-learning'},mindset:{label:'Mindset',cls:'type-mindset'},academic:{label:'Academic',cls:'type-academic'},journaling:{label:'Journaling',cls:'type-journaling'},reflection:{label:'Reflection',cls:'type-reflection'},audio:{label:'Audio',cls:'type-audio'},comm:{label:'Komunikasi',cls:'type-comm'},custom:{label:'Custom',cls:'type-custom'}};
+
+const DEFAULT_STATE = {
+  currentDay:1,streak:0,lastActive:null,completedDays:[],checklist:{},journals:{},userName:'Sayang',
+  adminMessage:'',adminMessageId:'',
+  motivation:["Setiap langkah kecil hari ini adalah fondasi versi terbaikmu.","Kamu tidak perlu sempurna, kamu hanya perlu konsisten.","30 hari cukup untuk mengubah segalanya.","Hari ini adalah halaman baru dari ceritamu."],
+  levels:{
+    calm:{icon:'🌿',name:'Calm Mode',desc:'Tenang dulu, bangun fondasimu',color:'#D6E8EF',textColor:'#1A3A4A'},
+    smart:{icon:'🧠',name:'Smart Mode',desc:'Mulai berpikir lebih dalam',color:'#DDD6F3',textColor:'#2D1B69'},
+    consistent:{icon:'⚡',name:'Consistent Mode',desc:'Konsistensi adalah kuncinya',color:'#FDDCB5',textColor:'#5C2800'},
+    future:{icon:'🚀',name:'Future Mode',desc:'Masa depanmu sudah terlihat',color:'#C8E6C9',textColor:'#1B4D1B'}
+  }
+};
+
+const RITUAL_ITEMS = [
+  {id:'check_progress',label:'Cek progres dan mood user hari ini'},
+  {id:'prepare_tomorrow',label:'Pastikan quest untuk hari berikutnya sudah siap'},
+  {id:'read_journal',label:'Baca jurnal yang ditulis user'},
+  {id:'send_support',label:'Kirim pesan dukungan jika diperlukan'},
+  {id:'review_streak',label:'Review streak dan berikan apresiasi jika meningkat'},
+  {id:'update_motivation',label:'Update pesan motivasi jika perlu'}
+];
+
+let STATE = {}, QUESTS = [], TEMPLATES = [], selDay = 1, nextId = 100;
+let activeFilter = 'all', questSearchQuery = '';
+let syncTimer = null, syncInFlight = false;
+
+// ── SYNC UI ──
+function setSyncStatus(s) {
+  const dot = document.getElementById('sync-dot'), lbl = document.getElementById('sync-label');
+  if (!dot) return;
+  dot.className = 'sync-dot ' + s;
+  lbl.textContent = s==='ok'?'Tersinkronisasi':s==='syncing'?'Menyimpan…':'Gagal sinkronisasi';
+}
+
+// ── SUPABASE: PULL ──
+async function pullAll() {
+  setSyncStatus('syncing');
+  try {
+    const [stateRes, questsRes] = await Promise.all([
+      sb.from('app_state').select('data').eq('id','singleton').single(),
+      sb.from('quests').select('*').order('day').order('quest_id')
+    ]);
+    if (stateRes.data) STATE = { ...JSON.parse(JSON.stringify(DEFAULT_STATE)), ...stateRes.data.data };
+    else STATE = JSON.parse(JSON.stringify(DEFAULT_STATE));
+    if (questsRes.data) {
+      QUESTS = questsRes.data.map(r => ({ id:r.quest_id, day:r.day, title:r.title, type:r.type, desc:r.description, duration:r.duration, link:r.link, reflection:r.reflection }));
+      nextId = QUESTS.length ? Math.max(...QUESTS.map(q=>q.id))+1 : 1;
+    }
+    setSyncStatus('ok');
+    renderAll();
+    showToast('Data diperbarui dari Supabase');
+  } catch(e) {
+    console.error('Pull error:', e);
+    setSyncStatus('err');
+    showToast('Gagal mengambil data dari Supabase');
+  }
+}
+
+// ── SUPABASE: PUSH STATE ──
+async function pushState() {
+  if (syncInFlight) return;
+  syncInFlight = true;
+  setSyncStatus('syncing');
+  try {
+    await sb.from('app_state').upsert({ id:'singleton', data:STATE, updated_at:new Date().toISOString() });
+    setSyncStatus('ok');
+  } catch(e) {
+    console.error('Push state error:', e);
+    setSyncStatus('err');
+  } finally {
+    syncInFlight = false;
+  }
+}
+
+function schedulePush() {
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(pushState, 600);
+}
+function saveState() { schedulePush(); }
+
+// ── QUESTS: SUPABASE CRUD ──
+async function pushQuest(q) {
+  // Upsert a single quest row
+  const row = { quest_id:q.id, day:q.day, title:q.title, type:q.type, description:q.desc||'', duration:q.duration||0, link:q.link||'', reflection:q.reflection||'', updated_at:new Date().toISOString() };
+  const { error } = await sb.from('quests').upsert(row, { onConflict:'quest_id' });
+  if (error) { console.error('Quest upsert error:', error); setSyncStatus('err'); }
+  else setSyncStatus('ok');
+}
+async function deleteQuestRemote(questId) {
+  const { error } = await sb.from('quests').delete().eq('quest_id', questId);
+  if (error) { console.error('Quest delete error:', error); setSyncStatus('err'); }
+  else setSyncStatus('ok');
+}
+
+// ── TEMPLATES (localStorage only) ──
+function loadTemplates() { const t = localStorage.getItem(KEY_TEMPLATES); TEMPLATES = t ? JSON.parse(t) : []; }
+function saveTemplates() { localStorage.setItem(KEY_TEMPLATES, JSON.stringify(TEMPLATES)); }
+
+// ── RITUAL (Supabase admin_data) ──
+async function loadRitualFromSupabase() {
+  const { data } = await sb.from('admin_data').select('rituals,notes').eq('id','admin_config').single();
+  if (data) {
+    localStorage.setItem(KEY_RITUAL_DONE, JSON.stringify(data.rituals||{}));
+    const todayKey = 'adminNotes_' + new Date().toDateString();
+    if (data.notes) localStorage.setItem(todayKey, data.notes);
+  }
+}
+async function saveRitualToSupabase() {
+  const rituals = JSON.parse(localStorage.getItem(KEY_RITUAL_DONE)||'{}');
+  const todayKey = 'adminNotes_' + new Date().toDateString();
+  const notes = localStorage.getItem(todayKey)||'';
+  await sb.from('admin_data').upsert({ id:'admin_config', rituals, notes, updated_at:new Date().toISOString() });
+}
+
+// ── AUTH ──
+function handleLogin(e) {
+  e.preventDefault();
+  const pw = document.getElementById('admin-pw').value, err = document.getElementById('login-err');
+  if (pw === ADMIN_PW) {
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('shell').classList.remove('hidden');
+    document.getElementById('admin-pw').value = '';
+    pullAll();
+    loadRitualFromSupabase();
+  } else {
+    err.classList.add('show');
+    document.getElementById('admin-pw').value='';
+    setTimeout(() => err.classList.remove('show'), 3000);
+  }
+}
+function logout() { document.getElementById('shell').classList.add('hidden'); document.getElementById('login-screen').classList.remove('hidden'); }
+
+// ── OVERVIEW ──
+function renderOverview() {
+  const day = STATE.currentDay, jD = Object.values(STATE.journals||{}).filter(j=>j?.life||j?.reflection).length, cD = (STATE.completedDays||[]).length;
+  document.getElementById('overview-stats').innerHTML = [['Hari Aktif',day+'/30'],['Quest Dibuat',QUESTS.length],['Hari Selesai',cD+'/30'],['Journal',jD+' hari']].map(([l,v])=>`<div class="stat-card"><span class="sv">${v}</span><div class="sl">${l}</div></div>`).join('');
+  const tq = QUESTS.filter(q=>q.day===day), oq = document.getElementById('overview-today-quests');
+  if (!tq.length) { oq.innerHTML=`<div style="color:var(--muted);font-size:13px;padding:8px 0">Belum ada quest untuk hari ke-${day}.</div>`; }
+  else oq.innerHTML = tq.map(q => { const m=TYPE_META[q.type]||TYPE_META.custom,cl=STATE.checklist[day],done=cl&&cl[q.id]; return `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)"><div style="width:18px;height:18px;border-radius:5px;border:2px solid ${done?'var(--accent)':'var(--border)'};background:${done?'var(--accent)':'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0">${done?'<span style="color:#fff;font-size:10px;font-weight:700">✓</span>':''}</div><span style="flex:1;font-size:13px;${done?'text-decoration:line-through;opacity:.45':''}">${q.title}</span><span class="qr-type ${m.cls}">${m.label}</span></div>`; }).join('');
+  const dist = {}; for (let d=1;d<=30;d++) dist[d]=QUESTS.filter(q=>q.day===d).length;
+  document.getElementById('overview-dist').innerHTML = Object.entries(dist).map(([d,c])=>{const act=parseInt(d)===STATE.currentDay;return`<div title="Hari ${d}: ${c} quest" style="display:flex;flex-direction:column;align-items:center;gap:3px"><div style="width:28px;background:${c>0?(act?'var(--accent)':'#A8C5D6'):'var(--border)'};border-radius:4px;height:${Math.max(8,c*10)}px"></div><span style="font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--muted)">${d}</span></div>`;}).join('');
+}
+
+// ── USER PROGRESS ──
+function renderUserProgress() {
+  const day = STATE.currentDay, cg = document.getElementById('up-cal-grid'); cg.innerHTML='';
+  for (let d=1;d<=30;d++) { const c=document.createElement('div'); c.className='up-cell'+(d===day?' today':STATE.completedDays.includes(d)?' done':''); c.textContent=d; c.style.cursor='pointer'; c.title='Hari '+d+(STATE.journals[d]?' (ada jurnal)':''); c.onclick=()=>openJournalModal(d); cg.appendChild(c); }
+  const moodIcons = {happy:'😊',calm:'😌',tired:'🥱',sad:'😢',focus:'🔥'};
+  let mHTML=''; for (let d=1;d<=30;d++) { const m=STATE.journals[d]?.mood; mHTML+=`<div class="mood-cell" title="Hari ${d}: ${m||'belum'}" style="opacity:${m?1:.3};cursor:${m?'pointer':'default'}" ${m?`onclick="openJournalModal(${d})"`:''}>${m?moodIcons[m]:'·'}</div>`; }
+  document.getElementById('up-mood-grid').innerHTML = mHTML;
+  const entries = Object.keys(STATE.journals).map(Number).filter(d=>d<=day).sort((a,b)=>b-a).slice(0,5);
+  const jl = document.getElementById('up-latest-journals');
+  if (!entries.length) { jl.innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px 0">Belum ada jurnal.</div>'; }
+  else jl.innerHTML = entries.map(d=>{const j=STATE.journals[d],mood=j?.mood?moodIcons[j.mood]:'';const preview=(j?.reflection||j?.life||'').slice(0,100);return`<div style="padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer" onclick="openJournalModal(${d})"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px">Hari ke-${d}</span><span style="font-size:16px">${mood}</span></div><div style="font-size:13px;color:var(--muted);font-style:italic;line-height:1.5">${preview||'<em>Belum ada isi</em>'}${preview.length>=100?'…':''}</div></div>`;}).join('');
+  const streak=STATE.streak||0,done=STATE.completedDays.length,jDays=Object.keys(STATE.journals).length;
+  document.getElementById('up-summary').innerHTML=[['Streak',streak+' hari'],['Hari Diselesaikan',done+'/30'],['Jurnal Ditulis',jDays+' hari'],['Quest Total',QUESTS.length]].map(([l,v])=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px"><span>${l}</span><span style="font-family:'JetBrains Mono',monospace;font-weight:700">${v}</span></div>`).join('');
+}
+
+function openJournalModal(d) {
+  const j = STATE.journals[d];
+  const moodIcons = {happy:'😊 Senang',calm:'😌 Tenang',tired:'🥱 Lelah',sad:'😢 Sedih',focus:'🔥 Produktif'};
+  document.getElementById('jm-title').textContent = 'Jurnal Hari ke-'+d;
+  document.getElementById('jm-mood').textContent = j?.mood ? moodIcons[j.mood] : 'Mood tidak diisi';
+  document.getElementById('jm-life').textContent = j?.life||'Pertanyaan belum dijawab.';
+  document.getElementById('jm-ref').textContent = j?.reflection||'Refleksi belum diisi.';
+  document.getElementById('journal-modal').classList.add('open');
+}
+function closeJournalModal() { document.getElementById('journal-modal').classList.remove('open'); }
+
+// ── QUEST LIST ──
+function renderQuestList() {
+  const fb = document.getElementById('day-filter-bar');
+  const days = [...new Set(QUESTS.map(q=>q.day))].sort((a,b)=>a-b);
+  fb.innerHTML = `<button class="filter-btn ${activeFilter==='all'?'active':''}" onclick="setFilter('all',this)">Semua</button>`+days.map(d=>`<button class="filter-btn ${activeFilter==d?'active':''}" onclick="setFilter(${d},this)">Hari ${d}</button>`).join('');
+  const filtered = activeFilter==='all' ? QUESTS : QUESTS.filter(q=>q.day===parseInt(activeFilter));
+  const sorted = [...filtered].sort((a,b)=>a.day-b.day||a.id-b.id);
+  const ql = document.getElementById('quest-list');
+  if (!sorted.length) { ql.innerHTML='<div class="empty-state"><h4>Belum ada quest</h4><p>Buat quest pertama lewat menu "Tambah Quest".</p></div>'; return; }
+  ql.innerHTML = sorted.map(q=>{const m=TYPE_META[q.type]||TYPE_META.custom;return`<div class="quest-row"><span class="qr-day">Hari ${q.day}</span><span class="qr-title">${q.title}</span><span class="qr-type ${m.cls}">${m.label}</span><div class="qr-actions"><button class="btn btn-sm" style="background:var(--accent-light);color:var(--accent);border:none;cursor:pointer;font-family:'Instrument Sans',sans-serif;font-weight:600;border-radius:6px" onclick="openEdit(${q.id})">Edit</button><button class="btn btn-success btn-sm" onclick="duplicateQuest(${q.id})">Duplikat</button><button class="btn btn-danger btn-sm" onclick="deleteQuest(${q.id})">Hapus</button></div></div>`;}).join('');
+  applyQuestSearch();
+}
+function searchQuests(q) { questSearchQuery=(q||'').toLowerCase().trim(); applyQuestSearch(); }
+function applyQuestSearch() { document.querySelectorAll('.quest-row').forEach(r=>{r.style.display=r.innerText.toLowerCase().includes(questSearchQuery)?'flex':'none';}); }
+function setFilter(v, btn) { activeFilter=v; document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); renderQuestList(); }
+
+// ── ADD / EDIT / DELETE / DUPLICATE ──
+async function addQuest() {
+  const day = parseInt(document.getElementById('add-day').value);
+  const title = document.getElementById('add-title').value.trim();
+  if (!day||!title) { showToast('Isi hari dan judul misi'); return; }
+  const q = { id:nextId++, day, title, type:document.getElementById('add-type').value, duration:parseInt(document.getElementById('add-duration').value)||0, desc:document.getElementById('add-desc').value.trim(), link:document.getElementById('add-link').value.trim(), reflection:document.getElementById('add-reflection').value.trim() };
+  QUESTS.push(q);
+  setSyncStatus('syncing');
+  await pushQuest(q);
+  ['add-day','add-title','add-duration','add-desc','add-link','add-reflection'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  showToast('Quest berhasil ditambahkan');
+  renderOverview();
+}
+async function duplicateQuest(id) {
+  const q = QUESTS.find(x=>x.id===id); if (!q) return;
+  const nq = {...q, id:nextId++};
+  QUESTS.push(nq);
+  setSyncStatus('syncing');
+  await pushQuest(nq);
+  renderQuestList();
+  showToast('Quest diduplikat');
+}
+function openEdit(id) {
+  const q = QUESTS.find(x=>x.id===id); if (!q) return;
+  document.getElementById('edit-quest-id').value = id;
+  document.getElementById('edit-day-label').textContent = q.day;
+  document.getElementById('edit-title').value = q.title;
+  document.getElementById('edit-type').value = q.type;
+  document.getElementById('edit-duration').value = q.duration||'';
+  document.getElementById('edit-desc').value = q.desc||'';
+  document.getElementById('edit-link').value = q.link||'';
+  document.getElementById('edit-ref-prompt').value = q.reflection||'';
+  document.getElementById('edit-modal').classList.add('open');
+}
+async function saveEdit() {
+  const id = parseInt(document.getElementById('edit-quest-id').value), idx = QUESTS.findIndex(q=>q.id===id);
+  if (idx===-1) return;
+  QUESTS[idx] = {...QUESTS[idx], title:document.getElementById('edit-title').value, type:document.getElementById('edit-type').value, duration:parseInt(document.getElementById('edit-duration').value)||0, desc:document.getElementById('edit-desc').value, link:document.getElementById('edit-link').value, reflection:document.getElementById('edit-ref-prompt').value};
+  setSyncStatus('syncing');
+  await pushQuest(QUESTS[idx]);
+  closeModal();
+  renderQuestList();
+  renderOverview();
+  showToast('Quest disimpan');
+}
+async function deleteQuest(id) {
+  if (!confirm('Hapus quest ini?')) return;
+  QUESTS = QUESTS.filter(q=>q.id!==id);
+  setSyncStatus('syncing');
+  await deleteQuestRemote(id);
+  renderQuestList();
+  renderOverview();
+  showToast('Quest dihapus');
+}
+
+// ── TEMPLATES ──
+function saveAsTemplate() {
+  const title = document.getElementById('add-title').value.trim(); if (!title) { showToast('Isi judul misi terlebih dahulu'); return; }
+  TEMPLATES.push({id:Date.now(),title,type:document.getElementById('add-type').value,duration:parseInt(document.getElementById('add-duration').value)||0,desc:document.getElementById('add-desc').value.trim(),link:document.getElementById('add-link').value.trim(),reflection:document.getElementById('add-reflection').value.trim()});
+  saveTemplates(); showToast('Disimpan sebagai template');
+}
+function renderTemplates() {
+  const el=document.getElementById('template-list'),em=document.getElementById('template-empty');
+  if (!TEMPLATES.length) {el.innerHTML='';em.style.display='block';return;}
+  em.style.display='none';
+  el.innerHTML=TEMPLATES.map(t=>{const m=TYPE_META[t.type]||TYPE_META.custom;return`<div class="tpl-row"><span class="qr-type ${m.cls}">${m.label}</span><span class="tpl-title">${t.title}</span>${t.duration?`<span style="font-size:11px;color:var(--muted)">${t.duration} min</span>`:''}<button class="btn btn-sm btn-ghost" onclick="useTemplate(${t.id})">Gunakan</button><button class="btn btn-danger btn-sm" onclick="deleteTemplate(${t.id})">×</button></div>`;}).join('');
+}
+function useTemplate(id) {
+  const t=TEMPLATES.find(x=>x.id===id);if(!t)return;
+  document.getElementById('add-title').value=t.title;document.getElementById('add-type').value=t.type;
+  document.getElementById('add-duration').value=t.duration||'';document.getElementById('add-desc').value=t.desc||'';
+  document.getElementById('add-link').value=t.link||'';document.getElementById('add-reflection').value=t.reflection||'';
+  switchPanel('add-quest',document.querySelector('.menu-btn.active'));showToast('Template dimuat, isi hari dan simpan');
+}
+function deleteTemplate(id) { TEMPLATES=TEMPLATES.filter(t=>t.id!==id);saveTemplates();renderTemplates(); }
+
+// ── LEVELS ──
+function renderLevelEditor() {
+  document.getElementById('level-editor').innerHTML = Object.entries(STATE.levels).map(([k,l])=>`<div class="level-row"><div class="level-row-label">${k.toUpperCase()}</div><div class="form-row"><div class="form-group" style="margin:0"><label>Icon</label><input id="lv-${k}-icon" value="${l.icon}"></div><div class="form-group" style="margin:0"><label>Nama</label><input id="lv-${k}-name" value="${l.name}"></div></div><div class="form-group" style="margin:8px 0 0"><label>Deskripsi</label><input id="lv-${k}-desc" value="${l.desc}"></div></div>`).join('');
+}
+function saveLevels() {
+  ['calm','smart','consistent','future'].forEach(k=>{STATE.levels[k].icon=document.getElementById('lv-'+k+'-icon').value;STATE.levels[k].name=document.getElementById('lv-'+k+'-name').value;STATE.levels[k].desc=document.getElementById('lv-'+k+'-desc').value;});
+  saveState(); showToast('Level tersimpan');
+}
+
+// ── MOTIVATION ──
+function renderMotivEditor() { document.getElementById('motiv-editor').innerHTML=STATE.motivation.map((msg,i)=>`<div class="motiv-row"><textarea rows="2" id="motiv-${i}">${msg}</textarea><button class="btn btn-danger btn-sm" onclick="removeMotiv(${i})" style="flex-shrink:0;align-self:center">×</button></div>`).join(''); }
+function saveMotiv() { const msgs=[]; document.querySelectorAll('[id^="motiv-"]').forEach(t=>{if(t.value.trim())msgs.push(t.value.trim());}); STATE.motivation=msgs; saveState(); showToast('Pesan motivasi tersimpan'); }
+function addMotiv() { STATE.motivation.push('Tulis pesan motivasimu di sini...'); renderMotivEditor(); }
+function removeMotiv(i) { STATE.motivation.splice(i,1); renderMotivEditor(); }
+
+// ── ADMIN MESSAGE ──
+function renderAdminMessage() {
+  const msg=STATE.adminMessage||'';
+  const el=document.getElementById('admin-message-input');if(el)el.value=msg;
+  document.getElementById('admin-msg-preview').textContent=msg||'(Belum ada pesan)';
+}
+function saveAdminMessage() {
+  const msg=(document.getElementById('admin-message-input').value||'').trim();
+  STATE.adminMessage=msg; STATE.adminMessageId=msg?'msg-'+Date.now():'';
+  saveState(); showToast(msg?'Pesan terkirim ke user!':'Pesan dikosongkan');
+  document.getElementById('admin-msg-preview').textContent=msg||'(Belum ada pesan)';
+}
+function clearAdminMessage() { document.getElementById('admin-message-input').value=''; STATE.adminMessage=''; STATE.adminMessageId=''; saveState(); showToast('Pesan dihapus'); document.getElementById('admin-msg-preview').textContent='(Belum ada pesan)'; }
+
+// ── USER SETTINGS ──
+function renderUserSettings() { const el=document.getElementById('user-name-input'); if(el) el.value=STATE.userName||''; }
+function saveUserName() { const name=(document.getElementById('user-name-input').value||'').trim(); STATE.userName=name||'Sayang'; saveState(); showToast('Nama tersimpan: '+STATE.userName); }
+
+// ── DAY CONTROL ──
+function renderDaySelector() {
+  const ds=document.getElementById('day-sel-grid'); ds.innerHTML=''; selDay=STATE.currentDay;
+  for (let d=1;d<=30;d++) { const b=document.createElement('div'); b.className='day-sel-btn'+(d===STATE.currentDay?' selected':''); b.textContent=d; b.onclick=()=>{selDay=d;document.querySelectorAll('.day-sel-btn').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');document.getElementById('cur-day-display').textContent=d;}; ds.appendChild(b); }
+  document.getElementById('cur-day-display').textContent=STATE.currentDay;
+}
+function saveDay() { STATE.currentDay=selDay; saveState(); showToast('Hari aktif diset ke hari ke-'+selDay); renderOverview(); }
+
+// ── RITUAL HARIAN ──
+function renderRitual() {
+  const todayKey = 'ritual-'+new Date().toDateString();
+  const done = JSON.parse(localStorage.getItem(KEY_RITUAL_DONE)||'{}');
+  const todayDone = done[todayKey]||[];
+  document.getElementById('ritual-list').innerHTML = RITUAL_ITEMS.map(item=>{const isDone=todayDone.includes(item.id);return`<div class="ritual-item"><div class="ritual-check ${isDone?'done':''}" onclick="toggleRitual('${item.id}','${todayKey}',this)"></div><div class="ritual-label ${isDone?'done':''}">${item.label}</div></div>`;}).join('');
+  document.getElementById('ritual-status').textContent = todayDone.length+'/'+RITUAL_ITEMS.length+' selesai';
+  const todayNoteKey = 'adminNotes_'+new Date().toDateString();
+  const notes = localStorage.getItem(todayNoteKey)||'';
+  const na = document.getElementById('admin-notes'); if(na) na.value=notes;
+}
+async function toggleRitual(id, todayKey, el) {
+  const done = JSON.parse(localStorage.getItem(KEY_RITUAL_DONE)||'{}');
+  if (!done[todayKey]) done[todayKey]=[];
+  const idx = done[todayKey].indexOf(id);
+  if (idx>-1) done[todayKey].splice(idx,1); else done[todayKey].push(id);
+  localStorage.setItem(KEY_RITUAL_DONE, JSON.stringify(done));
+  await saveRitualToSupabase();
+  renderRitual();
+}
+function resetRitual() {
+  const done = JSON.parse(localStorage.getItem(KEY_RITUAL_DONE)||'{}');
+  const k = 'ritual-'+new Date().toDateString();
+  delete done[k];
+  localStorage.setItem(KEY_RITUAL_DONE, JSON.stringify(done));
+  renderRitual();
+}
+async function saveAdminNotes() {
+  const n = document.getElementById('admin-notes').value;
+  const todayNoteKey = 'adminNotes_'+new Date().toDateString();
+  localStorage.setItem(todayNoteKey, n);
+  await saveRitualToSupabase();
+  showToast('Catatan tersimpan');
+}
+
+// ── NAV ──
+function switchPanel(name, btn) {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  document.querySelectorAll('.menu-btn').forEach(b=>b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  if (name==='quests') renderQuestList();
+  if (name==='levels') renderLevelEditor();
+  if (name==='motivation') renderMotivEditor();
+  if (name==='day-control') renderDaySelector();
+  if (name==='overview') renderOverview();
+  if (name==='user-progress') renderUserProgress();
+  if (name==='templates') renderTemplates();
+  if (name==='admin-message') renderAdminMessage();
+  if (name==='user-settings') renderUserSettings();
+  if (name==='ritual') renderRitual();
+}
+function closeModal() { document.getElementById('edit-modal').classList.remove('open'); }
+function showToast(msg) { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
+
+// ── EXPORT / IMPORT ──
+function exportData() {
+  const blob=new Blob([JSON.stringify({state:STATE,quests:QUESTS},null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download='growth30-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(url);showToast('Export berhasil');
+}
+function importData() {
+  const input=document.createElement('input');input.type='file';input.accept='.json,application/json';
+  input.onchange=async e=>{
+    const file=e.target.files&&e.target.files[0];if(!file)return;
+    const reader=new FileReader();
+    reader.onload=async ev=>{
+      try{
+        const imp=JSON.parse(ev.target.result);
+        if(imp.state&&typeof imp.state==='object'){STATE={...JSON.parse(JSON.stringify(DEFAULT_STATE)),...imp.state};}
+        if(imp.quests&&Array.isArray(imp.quests)){
+          // Delete all existing quests first
+          await sb.from('quests').delete().neq('quest_id',0);
+          // Re-insert all
+          QUESTS=imp.quests;
+          nextId=QUESTS.length?Math.max(...QUESTS.map(q=>q.id))+1:1;
+          for(const q of QUESTS) await pushQuest(q);
+        }
+        await pushState();
+        showToast('Import berhasil');
+        renderAll();
+      }catch(err){showToast('Format JSON tidak valid');}
+    };
+    reader.readAsText(file);
+  };input.click();
+}
+
+function renderAll() { renderOverview(); }
+
+// ── INIT ──
+function init() {
+  document.getElementById('edit-modal').addEventListener('click',e=>{if(e.target===document.getElementById('edit-modal'))closeModal();});
+  document.getElementById('journal-modal').addEventListener('click',e=>{if(e.target===document.getElementById('journal-modal'))closeJournalModal();});
+  document.getElementById('admin-message-input').addEventListener('input',function(){document.getElementById('admin-msg-preview').textContent=this.value||'(Belum ada pesan)';});
+  const pwInput=document.getElementById('admin-pw');if(pwInput)pwInput.focus();
+  loadTemplates();
+}
+init();
+</script>
+</body>
+</html>
