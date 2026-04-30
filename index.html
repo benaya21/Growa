@@ -1097,7 +1097,7 @@ function updateBnavActive(name) {
     }
   });
 }
-}
+
 function setActiveBnav(el) { document.querySelectorAll('.bnav-item').forEach(b=>b.classList.remove('active')); el.classList.add('active'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 function showToast(msg) { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
